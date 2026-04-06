@@ -1,0 +1,42 @@
+{
+  "name": "@managelm/openclaw-plugin",
+  "version": "1.0.0",
+  "description": "Manage Linux & Windows servers from OpenClaw with natural language",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "ManageLM",
+    "url": "https://www.managelm.com"
+  },
+  "homepage": "https://www.managelm.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/managelm/openclaw-plugin.git"
+  },
+  "keywords": [
+    "openclaw",
+    "managelm",
+    "server-management",
+    "linux",
+    "windows",
+    "infrastructure",
+    "devops",
+    "sysadmin"
+  ],
+  "openclaw": {
+    "extensions": ["./dist/index.js"],
+    "compat": {
+      "pluginApi": ">=2026.3.24-beta.2",
+      "minGatewayVersion": "2026.3.24-beta.2"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

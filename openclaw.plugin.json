@@ -1,0 +1,45 @@
+{
+  "id": "managelm",
+  "name": "ManageLM",
+  "description": "Manage Linux & Windows servers with natural language",
+  "version": "1.0.0",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "portalUrl": {
+        "type": "string",
+        "description": "ManageLM portal URL",
+        "default": "https://app.managelm.com"
+      },
+      "apiKey": {
+        "type": "string",
+        "description": "API key from Portal > Settings > MCP & API"
+      },
+      "webhookSecret": {
+        "type": "string",
+        "description": "Webhook HMAC secret for real-time events"
+      }
+    }
+  },
+  "uiHints": {
+    "portalUrl": {
+      "label": "Portal URL",
+      "placeholder": "https://app.managelm.com",
+      "help": "Default: app.managelm.com (SaaS)."
+    },
+    "apiKey": {
+      "label": "API Key",
+      "placeholder": "mlm_ak_...",
+      "sensitive": true,
+      "help": "Generate in Portal > Settings > MCP & API."
+    },
+    "webhookSecret": {
+      "label": "Webhook Secret",
+      "sensitive": true,
+      "advanced": true,
+      "help": "Optional. Enables real-time alerts."
+    }
+  },
+  "skills": ["skills/managelm"]
+}
