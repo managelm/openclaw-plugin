@@ -8,6 +8,12 @@ Manage your Linux and Windows servers from OpenClaw using natural language.
 openclaw plugins install managelm
 ```
 
+Or from a downloaded tarball:
+
+```bash
+openclaw plugins install managelm-openclaw-1.0.0.tar.gz
+```
+
 ## Setup
 
 ```bash
