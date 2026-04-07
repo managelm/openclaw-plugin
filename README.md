@@ -1,44 +1,64 @@
-# ManageLM — OpenClaw Plugin
+<p align="center">
+  <a href="https://www.managelm.com">
+    <img src="https://www.managelm.com/assets/ManageLM.png" alt="ManageLM" height="50">
+  </a>
+</p>
 
-Manage your Linux and Windows servers from OpenClaw using natural language.
+<h3 align="center">OpenClaw Plugin</h3>
 
-## Install
+<p align="center">
+  Manage Linux &amp; Windows servers from OpenClaw using natural language.
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License"></a>
+  <a href="https://www.managelm.com"><img src="https://img.shields.io/badge/website-managelm.com-cyan" alt="Website"></a>
+  <a href="https://www.managelm.com/plugins/openclaw.html"><img src="https://img.shields.io/badge/docs-full%20documentation-green" alt="Docs"></a>
+</p>
+
+---
+
+The ManageLM plugin for OpenClaw provides 17 tools for managing your infrastructure directly from the OpenClaw agent. Run tasks, search your fleet, trigger audits, and more — all through natural language.
+
+## Quick Start
+
+### 1. Install
 
 ```bash
 openclaw plugins install managelm
 ```
 
-Or from a downloaded tarball:
+### 2. Configure
 
 ```bash
-openclaw plugins install managelm-openclaw-1.0.0.tar.gz
-```
-
-## Setup
-
-```bash
-# 1. Set your API key (from Portal > Settings > MCP & API)
+# Set your API key (from Portal > Settings > MCP & API)
 openclaw config set plugins.entries.managelm.config.apiKey "mlm_ak_your_key"
 
-# 2. Trust the plugin
+# Trust the plugin and enable tools
 openclaw config set plugins.allow '["managelm"]'
-
-# 3. Enable tools for the agent
 openclaw config set tools.allow '["managelm"]'
 openclaw config set tools.profile "full"
-
-# 4. Restart the gateway
 ```
 
-Self-hosted portals — also set:
+Self-hosted portals:
 
 ```bash
 openclaw config set plugins.entries.managelm.config.portalUrl "https://portal.example.com"
 ```
 
+### 3. Use it
+
+```
+> List my servers
+> Install nginx on web-prod-1
+> Which servers have CPU above 80%?
+> Run a security audit on db-primary
+> Who has SSH access to production servers?
+```
+
 ## Tools (17)
 
-### Server management
+### Server Management
 
 | Tool | Description |
 |------|-------------|
@@ -47,7 +67,7 @@ openclaw config set plugins.entries.managelm.config.portalUrl "https://portal.ex
 | `managelm_run` | Run a task (skill + target + instruction) |
 | `managelm_answer_task` | Answer an interactive task question |
 
-### Task tracking
+### Task Tracking
 
 | Tool | Description |
 |------|-------------|
@@ -56,14 +76,14 @@ openclaw config set plugins.entries.managelm.config.portalUrl "https://portal.ex
 | `managelm_task_changes` | View file diffs from a task |
 | `managelm_revert_task` | Undo file changes |
 
-### Audits & scans
+### Audits & Scans
 
 | Tool | Description |
 |------|-------------|
 | `managelm_security_audit` | Run security audit |
 | `managelm_inventory_scan` | Run inventory scan |
 
-### Search (read-only, no commands dispatched)
+### Search (read-only)
 
 | Tool | Description |
 |------|-------------|
@@ -80,47 +100,34 @@ openclaw config set plugins.entries.managelm.config.portalUrl "https://portal.ex
 | `managelm_account` | Account info, plan, usage |
 | `managelm_send_email` | Send email report |
 
-## Example usage
+## Architecture
 
 ```
-> List my servers
-> Install nginx on web-prod-1
-> Which servers have CPU above 80%?
-> Run a security audit on db-primary
-> Show me all critical security findings
-> Who has SSH access to production servers?
+OpenClaw Agent ── REST API ──> ManageLM Portal ── WebSocket ──> Agent on Server
+  (17 tools)                   (cloud control      (outbound      (local LLM,
+                                plane)              only)          skill exec)
 ```
-
-## How it works
-
-```
-OpenClaw                      ManageLM Portal            Agent (on host)
-┌──────────────────┐  REST    ┌──────────────┐   WS     ┌──────────────┐
-│  Agent (LLM)     │ ───────► │  Portal API  │ ───────► │  Local LLM   │
-│  Plugin (17)     │ ◄─────── │  /api/       │ ◄─────── │  (executes)  │
-└──────────────────┘          └──────────────┘          └──────────────┘
-```
-
-## Webhooks (optional)
-
-```bash
-openclaw config set plugins.entries.managelm.config.webhookSecret "whsec_..."
-```
-
-Point a ManageLM webhook to your gateway's `/managelm/webhook`.
 
 ## Requirements
 
 - **OpenClaw** with gateway running
-- **ManageLM Portal** — [managelm.com](https://www.managelm.com) or self-hosted
+- **ManageLM account** — [sign up free](https://app.managelm.com/register) (up to 10 agents)
 - **ManageLM Agent** — on each managed server
 - **API Key** — from Portal > Settings > MCP & API
 
+## Other Integrations
+
+- [Claude Code Extension](https://github.com/managelm/claude-extension) — MCP integration for Claude
+- [VS Code Extension](https://github.com/managelm/vscode-extension) — `@managelm` in Copilot Chat
+- [ChatGPT Plugin](https://github.com/managelm/openai-gpt) — manage servers from ChatGPT
+- [n8n Plugin](https://github.com/managelm/n8n-plugin) — infrastructure automation workflows
+- [Slack Plugin](https://github.com/managelm/slack-plugin) — notifications and commands in Slack
+
 ## Links
 
-- [ManageLM](https://www.managelm.com)
-- [Docs](https://www.managelm.com/doc/)
-- [GitHub](https://github.com/managelm/openclaw-plugin)
+- [Website](https://www.managelm.com)
+- [Full Documentation](https://www.managelm.com/plugins/openclaw.html)
+- [Portal](https://app.managelm.com)
 
 ## License
 
