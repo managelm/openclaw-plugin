@@ -48,7 +48,7 @@ trap 'rm -rf "$STAGING_DIR"' EXIT
 # ── Build ─────────────────────────────────────────────────────────
 if [ "$SKIP_BUILD" = false ]; then
   echo "▸ Installing dependencies..."
-  npm install
+  npm ci
 
   echo "▸ Compiling TypeScript..."
   npx tsc

@@ -46,6 +46,13 @@ function createApi(api: PluginApi) {
       body: body ? JSON.stringify(body) : undefined,
       signal: AbortSignal.timeout(timeout),
     });
+    // Handle non-JSON responses (e.g. 502 HTML from a reverse proxy) — without
+    // this, res.json() throws a cryptic parse error instead of the real cause.
+    // Same handling as the slack/vscode plugin clients.
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      throw new Error(res.ok ? "Unexpected non-JSON response from portal" : `HTTP ${res.status} (non-JSON response)`);
+    }
     const json = await res.json() as Record<string, unknown>;
     if (!res.ok) throw new Error((json.error as string) || `HTTP ${res.status}`);
     return json;
