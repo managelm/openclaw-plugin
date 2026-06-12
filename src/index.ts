@@ -370,13 +370,22 @@ export default definePluginEntry({
         else if (req.body && typeof req.body === "object") raw = JSON.stringify(req.body);
         else { const chunks: Buffer[] = []; for await (const c of req) chunks.push(c); raw = Buffer.concat(chunks).toString("utf8"); }
 
-        const sig = req.headers["x-managelm-signature"];
-        const expected = createHmac("sha256", secret).update(raw).digest("hex");
-        if (!sig || sig.length !== expected.length || !timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
+        // Portal signs deliveries with X-Webhook-Signature (HMAC-SHA256 hex of
+        // the raw body) — see portal/src/webhooks/routes.ts deliverWebhook().
+        const sig = req.headers["x-webhook-signature"];
+        try {
+          const expected = createHmac("sha256", secret).update(raw).digest("hex");
+          if (typeof sig !== "string" || sig.length !== expected.length
+              || !timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
+            res.statusCode = 401; res.end("Bad signature"); return true;
+          }
+        } catch {
           res.statusCode = 401; res.end("Bad signature"); return true;
         }
 
-        const evt = JSON.parse(raw);
+        let evt: any;
+        try { evt = JSON.parse(raw); }
+        catch { res.statusCode = 400; res.end("Invalid JSON"); return true; }
         const host = evt.agent?.hostname || evt.hostname || "unknown";
         const msgs: Record<string, string> = {
           "agent.enrolled": `New server ${host} — awaiting approval`,
