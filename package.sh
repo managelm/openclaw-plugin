@@ -88,7 +88,7 @@ SIZE=$(du -h "$ROOT_DIR/$OUTFILE" | cut -f1)
 
 # Restore ownership
 [[ "$ROOT_DIR" == "/" ]] && { echo "FATAL: ROOT_DIR is /"; exit 1; }
-chown -R claude:claude "$ROOT_DIR"
+[ "$(id -u)" -eq 0 ] && chown -R "$(stat -c '%U:%G' "$ROOT_DIR")" "$ROOT_DIR" || true
 
 echo ""
 echo "Done: $OUTFILE ($SIZE)"
