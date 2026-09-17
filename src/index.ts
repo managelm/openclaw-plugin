@@ -45,6 +45,26 @@ const SLOW_CALL_TIMEOUT_MS = 90_000;
 /** Deliveries older or newer than this are refused: a captured one cannot be replayed later. */
 const WEBHOOK_MAX_AGE_MS = 5 * 60_000;
 
+/**
+ * Signatures of deliveries accepted within the window, so one captured inside
+ * it cannot be replayed either; a portal retry of a delivery that did arrive is
+ * the same body and is dropped too. Pruned on each delivery and capped.
+ */
+const seenDeliveries = new Map<string, number>();
+const MAX_SEEN_DELIVERIES = 10_000;
+
+/** True when this signature was already accepted within the window; records it otherwise. */
+function isReplay(signature: string, now: number): boolean {
+  for (const [sig, at] of seenDeliveries) {
+    if (now - at <= WEBHOOK_MAX_AGE_MS) break;   // Map keeps insertion order: the rest is newer
+    seenDeliveries.delete(sig);
+  }
+  if (seenDeliveries.has(signature)) return true;
+  if (seenDeliveries.size >= MAX_SEEN_DELIVERIES) seenDeliveries.delete(seenDeliveries.keys().next().value!);
+  seenDeliveries.set(signature, now);
+  return false;
+}
+
 /** Scan type → portal route and the key its result comes back under. */
 const SCANS: Record<string, { route: string; key: string }> = {
   security: { route: "security", key: "audit" },
@@ -109,7 +129,8 @@ function createApi(api: PluginApi) {
    */
   async function findAgent(hostname: string): Promise<{ agent: Agent } | { error: string }> {
     if (!agentsCache || Date.now() - agentsCacheTime > 5_000) {
-      agentsCache = (await request("GET", "/agents")).agents || [];
+      // The light list (id, names, status) is all resolution needs.
+      agentsCache = (await request("GET", "/agents?view=basic")).agents || [];
       agentsCacheTime = Date.now();
     }
     const h = hostname.toLowerCase();
@@ -195,9 +216,22 @@ const HOSTNAME = S("Server hostname or display name");
  */
 const AGENT_INFO_FIELDS = [
   "id", "hostname", "display_name", "status", "node_type", "os_info", "agent_version",
-  "ip_address", "ip_addresses", "is_public", "tags", "last_seen_at", "groups",
-  "health_metrics", "llm_status", "read_only_ai",
+  "ip_address", "ip_addresses", "is_public", "tags", "last_seen_at",
+  "health_metrics", "llm_status",
 ];
+
+/**
+ * The agent info the model reads, shaped like the MCP tool's: group names, and
+ * the EFFECTIVE read-only flag. The row's own `read_only_ai` misses an agent
+ * made read-only through a group, and the model would plan changes it refuses.
+ */
+function agentInfo(row: Json = {}): Json {
+  return {
+    ...Object.fromEntries(AGENT_INFO_FIELDS.map(f => [f, row[f]])),
+    groups: (row.groups ?? []).map((g: Json | string) => (typeof g === "string" ? g : g.name)),
+    read_only_ai: row.read_only_ai_effective ?? row.read_only_ai,
+  };
+}
 
 /** Skills a task can use: a direct assignment can be switched off, and run_task refuses those. */
 const usableSkills = (skills: Json[] = []) => skills.filter(s => s.enabled !== false);
@@ -407,7 +441,7 @@ export default definePluginEntry({
           portal.get("/tasks", { agent_id: agent.id, limit: 5 }),
         ]);
         return ok({
-          agent: Object.fromEntries(AGENT_INFO_FIELDS.map(f => [f, full.agent?.[f]])),
+          agent: agentInfo(full.agent),
           skills: usableSkills(skills.skills).map((s: Json) => ({ slug: s.slug, name: s.name })),
           recent_tasks: (tasks.tasks || []).map((t: Json) => ({ id: t.id, skill: t.skill_slug, status: t.status, summary: t.summary, created_at: t.created_at })),
         });
@@ -486,10 +520,15 @@ export default definePluginEntry({
         // Exactly one VM, by exact name or provider ID, as the MCP tool requires.
         // The search also matches regions and partial names, which only ever
         // become suggestions: never guess which machine to act on.
-        const { resources = [] } = await portal.get("/search/cloud", { query: p.resource, type: "vm" });
+        const { resources = [], truncated } = await portal.get("/search/cloud", { query: p.resource, type: "vm" });
         const lower = String(p.resource).toLowerCase();
         const exact: Json[] = resources.filter((r: Json) => String(r.name).toLowerCase() === lower || String(r.provider_id).toLowerCase() === lower);
         const listed = (rows: Json[]) => rows.slice(0, 10).map(r => ({ name: r.name, provider_id: r.provider_id, connector: r.connector_name }));
+        if (exact.length === 0 && truncated) {
+          // The search stops at 100 rows ordered by name: an exactly named VM
+          // can be past the cap, so this is not "no such VM".
+          return err(`Too many VMs match "${p.resource}" to find it by name. Ask the user for its exact provider ID.`);
+        }
         if (exact.length === 0) {
           return resources.length === 0
             ? err(`No VM matches "${p.resource}". Use managelm_search_cloud to find it.`)
@@ -567,9 +606,9 @@ export default definePluginEntry({
 
     tool("get_task_changes", "Files changed by a task, with an optional full diff fetched from the agent.",
       obj({ task_id: S("Task ID"), full_diff: B("Fetch the unified diff (agent must be online)") }, ["task_id"]),
-      async p => missing(p, "task_id") ?? ok(p.full_diff === true
+      async p => missing(p, "task_id") ?? ok((p.full_diff === true
         ? await portal.get(`/tasks/${encodeURIComponent(p.task_id)}/changes`, { full_diff: "true" }, SLOW_CALL_TIMEOUT_MS)
-        : await portal.get(`/tasks/${encodeURIComponent(p.task_id)}/changes`)));
+        : await portal.get(`/tasks/${encodeURIComponent(p.task_id)}/changes`)).changeset));
 
     tool("revert_task", "Revert the file changes of a task (agent online, changes under 30 days old). Call managelm_get_task_changes first.",
       obj({ task_id: S("Task ID to revert") }, ["task_id"]),
@@ -628,6 +667,9 @@ export default definePluginEntry({
         const sentAt = Date.parse(evt.timestamp);
         if (!Number.isFinite(sentAt) || Math.abs(Date.now() - sentAt) > WEBHOOK_MAX_AGE_MS) {
           res.statusCode = 401; res.end("Stale delivery"); return true;
+        }
+        if (isReplay(sig as string, Date.now())) {
+          res.statusCode = 200; res.end("duplicate"); return true;
         }
 
         // Deliveries are { event, timestamp, data } — the details live in data.

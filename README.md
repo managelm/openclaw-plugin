@@ -104,7 +104,7 @@ Webhooks are created by an admin in the portal:
 openclaw config set plugins.entries.managelm.config.webhookSecret "your_webhook_secret"
 ```
 
-Every delivery is checked against its `X-Webhook-Signature` (HMAC-SHA256), and one sent more than 5 minutes ago is refused so a captured delivery cannot be replayed. Without a secret configured, deliveries are refused, so a misconfiguration shows up as failed deliveries in the portal.
+Every delivery is checked against its `X-Webhook-Signature` (HMAC-SHA256), and one sent more than 5 minutes ago is refused, like a repeat of one already received, so a captured delivery cannot be replayed. A refused delivery counts as a failure on the portal, which disables a webhook after repeated failures: keep the gateway's clock synchronized. Without a secret configured, deliveries are refused, so a misconfiguration shows up as failed deliveries in the portal.
 
 ## Architecture
 
