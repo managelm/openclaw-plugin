@@ -18,7 +18,15 @@
 
 ---
 
-The ManageLM plugin for OpenClaw provides 17 tools for managing your infrastructure directly from the OpenClaw agent. Run tasks, search your fleet, trigger audits, and more — all through natural language.
+The ManageLM plugin for OpenClaw gives the OpenClaw agent the same tools ManageLM gives Claude through MCP: run tasks, search your fleet, run scans, act on cloud VMs, and more, all through natural language.
+
+## Features
+
+- **34 built-in tools** — modelled on the ManageLM MCP tools, with a `managelm_` prefix: tasks, scans, 13 fleet searches, hosting connectors and actions, task history and revert
+- **Interactive tasks** — when the agent needs input, OpenClaw asks you and answers the task
+- **Scans that wait** — security, inventory, access, certificate and activity scans return their result
+- **Cross-infrastructure search** — agents, inventory, security issues, activity, SSH keys, sudo, certificates, monitors, backups, credentials, keystore, cloud resources
+- **Webhook receiver** — signed ManageLM events logged in the OpenClaw gateway
 
 ## Quick Start
 
@@ -30,8 +38,10 @@ openclaw plugins install managelm
 
 ### 2. Configure
 
+In the ManageLM portal, go to **Settings > MCP & API > API Keys** and create a key. It acts as you, limited to the authorizations you tick: add **Reports** for scans, **Hosting** for VM actions, **Credentials** / **Keystore** to search those.
+
 ```bash
-# Set your API key (from Portal > Settings > MCP & API)
+# Set your API key
 openclaw config set plugins.entries.managelm.config.apiKey "mlm_ak_your_key"
 
 # Trust the plugin and enable tools
@@ -54,58 +64,54 @@ openclaw config set plugins.entries.managelm.config.portalUrl "https://portal.ex
 > Which servers have CPU above 80%?
 > Run a security audit on db-primary
 > Who has SSH access to production servers?
+> Who logged in to db-primary yesterday?
+> Which certificates expire this month?
 ```
 
-## Tools (17)
-
-### Server Management
+## Tools (34)
 
 | Tool | Description |
 |------|-------------|
-| `managelm_agents` | List all servers with status, health, OS, IP |
-| `managelm_agent_info` | Detailed info for one server |
-| `managelm_run` | Run a task (skill + target + instruction) |
-| `managelm_answer_task` | Answer an interactive task question |
+| `managelm_search_agents` | Servers by status, group, site, health or text |
+| `managelm_get_agent_info` | One server: OS, health, skills, recent tasks |
+| `managelm_get_agent_skills` / `managelm_list_available_skills` | Skills on a server / catalog skills not yet imported |
+| `managelm_get_account_info` / `managelm_list_team_members` | Account, groups and sites / team members |
+| `managelm_search_inventory` / `managelm_search_security` / `managelm_search_activity` | Inventory, security issues (audits, pentests, threats), logins and sudo |
+| `managelm_search_ssh_keys` / `managelm_search_sudo_rules` | Access across the fleet, mapped to your team |
+| `managelm_search_certificates` / `managelm_search_pki` | Certificates found on servers / certificates ManageLM issues |
+| `managelm_search_monitors` / `managelm_search_backups` | Monitors with current status / backups and their last run |
+| `managelm_search_credentials` / `managelm_search_keystore` | Rotating credentials / keystore keys and usage (metadata only) |
+| `managelm_list_connectors` / `managelm_search_cloud` / `managelm_get_cloud_info` | Hosting connectors and the resources they discover |
+| `managelm_cloud_action` | Start, stop, reboot or snapshot a VM (disruptive actions need your confirmation) |
+| `managelm_run_security_audit` / `managelm_run_inventory_scan` / `managelm_run_access_scan` / `managelm_run_certificate_scan` / `managelm_run_activity_scan` | Run a scan on one server and wait for the result |
+| `managelm_run_task` | Run a skill-based task on one server (`auto` lets the agent pick the skill) |
+| `managelm_answer_task` / `managelm_follow_up_task` | Answer a task waiting for input / continue a conversation |
+| `managelm_get_task_status` / `managelm_get_task_history` / `managelm_get_task_changes` / `managelm_revert_task` | Task results, history, file changes and revert |
+| `managelm_send_email` | Email yourself a report |
 
-### Task Tracking
+Tasks wait up to 2 minutes; a longer one returns its task ID to check later. Tasks and scans run on one server at a time. Approving agents, users, API keys and webhooks are managed in the portal.
 
-| Tool | Description |
-|------|-------------|
-| `managelm_task_status` | Check task status |
-| `managelm_task_history` | Recent tasks for a server |
-| `managelm_task_changes` | View file diffs from a task |
-| `managelm_revert_task` | Undo file changes |
+## Webhook events
 
-### Audits & Scans
+The plugin registers `/managelm/webhook` on the OpenClaw gateway and logs each ManageLM event it receives (servers going offline, failed tasks, monitors down, certificate renewals, ...).
 
-| Tool | Description |
-|------|-------------|
-| `managelm_security_audit` | Run security audit |
-| `managelm_inventory_scan` | Run inventory scan |
+Webhooks are created by an admin in the portal:
 
-### Search (read-only)
+1. Go to **Settings > MCP & API > Webhooks**, add a webhook to `https://<your-gateway>/managelm/webhook`, choose the event categories and set an **HMAC secret**
+2. Set the same secret in the plugin:
 
-| Tool | Description |
-|------|-------------|
-| `managelm_search_agents` | Search by health, OS, status, group |
-| `managelm_search_inventory` | Search packages, services, containers |
-| `managelm_search_security` | Search security findings |
-| `managelm_search_ssh_keys` | Search SSH keys |
-| `managelm_search_sudo` | Search sudo privileges |
+```bash
+openclaw config set plugins.entries.managelm.config.webhookSecret "your_webhook_secret"
+```
 
-### Utility
-
-| Tool | Description |
-|------|-------------|
-| `managelm_account` | Account info, plan, usage |
-| `managelm_send_email` | Send email report |
+Every delivery is checked against its `X-Webhook-Signature` (HMAC-SHA256), and one sent more than 5 minutes ago is refused so a captured delivery cannot be replayed. Without a secret configured, deliveries are refused, so a misconfiguration shows up as failed deliveries in the portal.
 
 ## Architecture
 
 ```
 OpenClaw Agent ── REST API ──> ManageLM Portal ── WebSocket ──> Agent on Server
-  (17 tools)                   (cloud control      (outbound      (local LLM,
-                                plane)              only)          skill exec)
+  (34 tools)                   (cloud control      (outbound      (skill exec)
+                                plane)              only)
 ```
 
 ## Requirements
@@ -113,7 +119,7 @@ OpenClaw Agent ── REST API ──> ManageLM Portal ── WebSocket ──> 
 - **OpenClaw** with gateway running
 - **ManageLM account** — [sign up free](https://app.managelm.com/register) (up to 10 agents)
 - **ManageLM Agent** — on each managed server
-- **API Key** — from Portal > Settings > MCP & API
+- **API Key** — created by any user in Portal > Settings > MCP & API
 
 ## Other Integrations
 

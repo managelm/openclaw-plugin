@@ -38,7 +38,7 @@
       "label": "Webhook Secret",
       "sensitive": true,
       "advanced": true,
-      "help": "Optional. Enables real-time alerts."
+      "help": "Optional. Needed to receive ManageLM webhook events on /managelm/webhook."
     }
   },
   "skills": ["skills/managelm"]
