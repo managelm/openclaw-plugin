@@ -2,7 +2,7 @@
   "id": "managelm",
   "name": "ManageLM",
   "description": "Manage Linux & Windows servers with natural language",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
