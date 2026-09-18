@@ -18,13 +18,13 @@
 
 ---
 
-The ManageLM plugin for OpenClaw gives the OpenClaw agent the same tools ManageLM gives Claude through MCP: run tasks, search your fleet, run scans, act on cloud VMs, and more, all through natural language.
+The ManageLM plugin for OpenClaw gives the OpenClaw agent the same tools ManageLM gives Claude through MCP, except the search of scheduled tasks: run tasks, search your fleet, run scans, act on cloud VMs, and more, all through natural language.
 
 ## Features
 
 - **34 built-in tools** — modelled on the ManageLM MCP tools, with a `managelm_` prefix: tasks, scans, 13 fleet searches, hosting connectors and actions, task history and revert
 - **Interactive tasks** — when the agent needs input, OpenClaw asks you and answers the task
-- **Scans that wait** — security, inventory, access, certificate and activity scans return their result
+- **Scans that wait** — security, inventory, access, certificate and activity scans return their result within 3 minutes, or status `running` after that
 - **Cross-infrastructure search** — agents, inventory, security issues, activity, SSH keys, sudo, certificates, monitors, backups, credentials, keystore, cloud resources
 - **Webhook receiver** — signed ManageLM events logged in the OpenClaw gateway
 
@@ -89,7 +89,7 @@ openclaw config set plugins.entries.managelm.config.portalUrl "https://portal.ex
 | `managelm_get_task_status` / `managelm_get_task_history` / `managelm_get_task_changes` / `managelm_revert_task` | Task results, history, file changes and revert |
 | `managelm_send_email` | Email yourself a report |
 
-Tasks wait up to 2 minutes; a longer one returns its task ID to check later. Tasks and scans run on one server at a time. Approving agents, users, API keys and webhooks are managed in the portal.
+Tasks wait up to 2 minutes; a longer one returns its task ID to check later. Scans wait up to 3 minutes; a longer one comes back with status `running`, and its result shows up in the matching `managelm_search_*` tool once it completes. Tasks and scans run on one server at a time. Approving agents, users, API keys and webhooks are managed in the portal.
 
 ## Webhook events
 
@@ -104,7 +104,7 @@ Webhooks are created by an admin in the portal:
 openclaw config set plugins.entries.managelm.config.webhookSecret "your_webhook_secret"
 ```
 
-Every delivery is checked against its `X-Webhook-Signature` (HMAC-SHA256), and one sent more than 5 minutes ago is refused, like a repeat of one already received, so a captured delivery cannot be replayed. A refused delivery counts as a failure on the portal, which disables a webhook after repeated failures: keep the gateway's clock synchronized. Without a secret configured, deliveries are refused, so a misconfiguration shows up as failed deliveries in the portal.
+Every delivery is checked against its `X-Webhook-Signature` (HMAC-SHA256), and one sent more than 5 minutes ago is refused, so a captured delivery cannot be replayed. A repeat of a delivery already received in those 5 minutes is answered `200` and not logged again. A refused delivery counts as a failure on the portal, which disables a webhook after repeated failures: keep the gateway's clock synchronized. Without a secret configured, deliveries are refused, so a misconfiguration shows up as failed deliveries in the portal.
 
 ## Architecture
 
