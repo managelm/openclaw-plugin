@@ -382,6 +382,7 @@ const EVENT_TITLES: Record<string, string> = {
   "console.opened": "Console opened", "console.closed": "Console closed",
   "desktop.opened": "Desktop session opened", "desktop.closed": "Desktop session closed",
   "files.opened": "File browser opened",
+  "schedule.report": "Scheduled task reported", "schedule.failed": "Scheduled task failed",
 };
 
 /** Deliveries are small JSON documents; refuse anything larger unread. */
@@ -393,7 +394,7 @@ function describeEvent(evt: Json): string {
   const title = EVENT_TITLES[evt.event] || evt.event;
   const host = d.display_name || d.hostname || d.agent_name;
   const who = d.user_email && `by ${d.user_email}`;
-  const subject = d.monitor_name || d.backup_name || d.common_name || d.credential_name || d.handle
+  const subject = d.monitor_name || d.backup_name || d.schedule_name || d.common_name || d.credential_name || d.handle
     || (d.report_type && `${String(d.report_type).replace(/_/g, " ")} report`);
   const detail = d.question || d.error_message || d.error || d.summary || d.reason;
   const line = [title, host && `on ${host}`, subject && `(${subject})`, who].filter(Boolean).join(" ");
