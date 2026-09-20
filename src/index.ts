@@ -615,12 +615,6 @@ export default definePluginEntry({
       obj({ task_id: S("Task ID to revert") }, ["task_id"]),
       async p => missing(p, "task_id") ?? ok(await portal.post(`/tasks/${encodeURIComponent(p.task_id)}/revert`, {}, SLOW_CALL_TIMEOUT_MS)));
 
-    // ── Utility ─────────────────────────────────────────────────
-
-    tool("send_email", "Send yourself an email with a report or summary (plain text).",
-      obj({ subject: S("Email subject"), body: S("Plain-text body; blank lines separate paragraphs") }, ["subject", "body"]),
-      async p => missing(p, "subject", "body") ?? ok(await portal.post("/email", { subject: p.subject, body: p.body })));
-
     // ── Webhook ─────────────────────────────────────────────────
 
     api.registerHttpRoute({

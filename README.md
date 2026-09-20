@@ -87,7 +87,6 @@ openclaw config set plugins.entries.managelm.config.portalUrl "https://portal.ex
 | `managelm_run_task` | Run a skill-based task on one server (`auto` lets the agent pick the skill) |
 | `managelm_answer_task` / `managelm_follow_up_task` | Answer a task waiting for input / continue a conversation |
 | `managelm_get_task_status` / `managelm_get_task_history` / `managelm_get_task_changes` / `managelm_revert_task` | Task results, history, file changes and revert |
-| `managelm_send_email` | Email yourself a report |
 
 Tasks wait up to 2 minutes; a longer one returns its task ID to check later. Scans wait up to 3 minutes; a longer one comes back with status `running`, and its result shows up in the matching `managelm_search_*` tool once it completes. Tasks and scans run on one server at a time. Approving agents, users, API keys and webhooks are managed in the portal.
 
@@ -110,7 +109,7 @@ Every delivery is checked against its `X-Webhook-Signature` (HMAC-SHA256), and o
 
 ```
 OpenClaw Agent ── REST API ──> ManageLM Portal ── WebSocket ──> Agent on Server
-  (34 tools)                   (cloud control      (outbound      (skill exec)
+  (33 tools)                   (cloud control      (outbound      (skill exec)
                                 plane)              only)
 ```
 

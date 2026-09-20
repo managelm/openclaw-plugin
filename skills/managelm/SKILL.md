@@ -44,7 +44,6 @@ You can manage remote servers through ManageLM. Use the `managelm_*` tools below
 | `managelm_get_task_history` | Recent tasks on a server |
 | `managelm_get_task_changes` | Files changed by a task, with diff |
 | `managelm_revert_task` | Undo the file changes of a task |
-| `managelm_send_email` | Email yourself a report |
 
 ## Running tasks
 
