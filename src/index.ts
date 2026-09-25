@@ -320,7 +320,7 @@ const SEARCHES: Array<{ name: string; route: string; description: string; parame
   },
   {
     name: "search_keystore", route: "keystore",
-    description: "KSM Keystore: keys, the applications using them, and per-day usage or refusals. Metadata only. Requires the Keystore authorization.",
+    description: "KSM Keystore: keys, the applications using them, and their usage or refusals. Metadata only. Requires the Keystore authorization.",
     parameters: obj({
       view: S("keys (default), clients, denied, activity"), query: S("Key, handle, application, caller or refusal reason"), agent: AGENT,
     }),
