@@ -262,11 +262,12 @@ const SEARCHES: Array<{ name: string; route: string; description: string; parame
   },
   {
     name: "search_security", route: "security",
-    description: "Security issues across servers: audit findings, pentest findings and threat alerts, each tagged with its source.",
+    description: "Security issues across servers: audit and vulnerability findings, pentest findings, threat alerts (service, session, virus, exposure) and exposure checks, each tagged with its source.",
     parameters: obj({
       query: S("Search titles and explanations"), severity: S("Minimum severity: critical, high, medium, low"),
-      category: S('ssh, firewall, users, permissions, updates, kernel, tls, docker, ... ("Threat Detection" for threats)'),
-      source: S("audit, pentest, threat, or all"), unresolved: B("Only open items (default true)"),
+      category: S('ssh, firewall, users, permissions, updates, kernel, tls, docker, vulnerability, ... ("Threat Detection" for threats, "Exposure" for exposure checks)'),
+      source: S("audit, pentest, threat, exposure, or all"), kind: S("Threat alerts only: service, session, virus, exposure (comma-separated for several)"),
+      unresolved: B("Only open items (default true)"),
       group: GROUP, site: SITE, since: SINCE, until: UNTIL,
     }),
   },

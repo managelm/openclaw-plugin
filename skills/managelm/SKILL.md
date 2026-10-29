@@ -18,7 +18,7 @@ You can manage remote servers through ManageLM. Use the `managelm_*` tools below
 | `managelm_get_account_info` | Account, groups and sites |
 | `managelm_list_team_members` | Team members, roles, permissions, SSH key status |
 | `managelm_search_inventory` | Services, packages, containers across servers |
-| `managelm_search_security` | Security issues from audits, pentests and threat alerts |
+| `managelm_search_security` | Security issues from audits, vulnerabilities, pentests, threat alerts and exposure checks |
 | `managelm_search_activity` | Logins, failed logins, sudo commands, file changes |
 | `managelm_search_ssh_keys` | SSH keys mapped to team members |
 | `managelm_search_sudo_rules` | Sudo rules and Windows administrators |
