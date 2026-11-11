@@ -497,7 +497,7 @@ export default definePluginEntry({
       obj({ resource: S("Resource name or provider ID") }, ["resource"]),
       async p => {
         if (!p.resource) return err("resource is required");
-        const { resources = [] } = await portal.get("/search/cloud", { query: p.resource });
+        const { rows: resources = [] } = await portal.get("/search/cloud", { query: p.resource });
         if (!resources.length) return err(`No hosting resource matches "${p.resource}". Use managelm_search_cloud to browse.`);
         const matches: Json[] = resources.slice(0, 5);
         const actions = new Map<string, Json>();
@@ -522,12 +522,12 @@ export default definePluginEntry({
         // Exactly one VM, by exact name or provider ID, as the MCP tool requires.
         // The search also matches regions and partial names, which only ever
         // become suggestions: never guess which machine to act on.
-        const { resources = [], truncated } = await portal.get("/search/cloud", { query: p.resource, type: "vm" });
+        const { rows: resources = [], truncated } = await portal.get("/search/cloud", { query: p.resource, type: "vm" });
         const lower = String(p.resource).toLowerCase();
         const exact: Json[] = resources.filter((r: Json) => String(r.name).toLowerCase() === lower || String(r.provider_id).toLowerCase() === lower);
         const listed = (rows: Json[]) => rows.slice(0, 10).map(r => ({ name: r.name, provider_id: r.provider_id, connector: r.connector_name }));
         if (exact.length === 0 && truncated) {
-          // The search stops at 100 rows ordered by name: an exactly named VM
+          // The search stops at 500 rows ordered by name: an exactly named VM
           // can be past the cap, so this is not "no such VM".
           return err(`Too many VMs match "${p.resource}" to find it by name. Ask the user for its exact provider ID.`);
         }

@@ -1,6 +1,6 @@
 {
   "name": "@managelm/openclaw-plugin",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Manage Linux & Windows servers from OpenClaw with natural language",
   "type": "module",
   "license": "Apache-2.0",
@@ -24,7 +24,9 @@
     "sysadmin"
   ],
   "openclaw": {
-    "extensions": ["./dist/index.js"],
+    "extensions": [
+      "./dist/index.js"
+    ],
     "compat": {
       "pluginApi": ">=2026.3.24-beta.2",
       "minGatewayVersion": "2026.3.24-beta.2"

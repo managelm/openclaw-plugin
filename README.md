@@ -76,7 +76,7 @@ openclaw config set plugins.entries.managelm.config.portalUrl "https://portal.ex
 | `managelm_get_agent_info` | One server: OS, health, skills, recent tasks |
 | `managelm_get_agent_skills` / `managelm_list_available_skills` | Skills on a server / catalog skills not yet imported |
 | `managelm_get_account_info` / `managelm_list_team_members` | Account, groups and sites / team members |
-| `managelm_search_inventory` / `managelm_search_security` / `managelm_search_activity` | Inventory, security issues (audits, pentests, threats), logins and sudo |
+| `managelm_search_inventory` / `managelm_search_security` / `managelm_search_activity` | Inventory, security issues (audits, pentests, threats, exposure checks), logins and sudo |
 | `managelm_search_ssh_keys` / `managelm_search_sudo_rules` | Access across the fleet, mapped to your team |
 | `managelm_search_certificates` / `managelm_search_pki` | Certificates found on servers / certificates ManageLM issues |
 | `managelm_search_monitors` / `managelm_search_backups` | Monitors with current status / backups and their last run |
