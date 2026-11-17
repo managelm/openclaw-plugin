@@ -122,9 +122,9 @@ OpenClaw Agent ── REST API ──> ManageLM Portal ── WebSocket ──> 
 
 ## Other Integrations
 
-- [Claude Code Extension](https://github.com/managelm/claude-extension) — MCP integration for Claude
+- [Claude Plugin](https://github.com/managelm/claude-plugin) — manage servers from claude.ai, Cowork and Claude Code
 - [VS Code Extension](https://github.com/managelm/vscode-extension) — `@managelm` in Copilot Chat
-- [ChatGPT Plugin](https://github.com/managelm/openai-gpt) — manage servers from ChatGPT
+- [ChatGPT Plugin](https://github.com/managelm/chatgpt-plugin) — manage servers from ChatGPT
 - [n8n Plugin](https://github.com/managelm/n8n-plugin) — infrastructure automation workflows
 - [Slack Plugin](https://github.com/managelm/slack-plugin) — notifications and commands in Slack
 
